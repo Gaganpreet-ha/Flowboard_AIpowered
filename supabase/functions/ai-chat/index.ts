@@ -6,8 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL = "anthropic/claude-3.5-sonnet";
+const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+const MODEL = "gpt-4o-mini";
 
 interface Message {
   role: "system" | "user" | "assistant";
@@ -30,8 +30,7 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Use Flowboard_KanbanAI secret (OpenRouter API key)
-  const apiKey = Deno.env.get("Flowboard_KanbanAI");
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) {
     return new Response(JSON.stringify({ error: "API key not configured" }), {
       status: 500,
@@ -58,13 +57,11 @@ Deno.serve(async (req: Request) => {
         "Be concise and friendly. When suggesting task actions, be specific about what to do.",
     };
 
-    const response = await fetch(OPENROUTER_API_URL, {
+    const response = await fetch(OPENAI_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
-        "HTTP-Referer": Deno.env.get("SUPABASE_URL") || "https://flowboard.app",
-        "X-Title": "Flowboard Kanban AI",
       },
       body: JSON.stringify({
         model: MODEL,
@@ -75,7 +72,7 @@ Deno.serve(async (req: Request) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("OpenRouter error:", response.status, errorText);
+      console.error("OpenAI error:", response.status, errorText);
       return new Response(
         JSON.stringify({ error: `AI service error: ${response.status}` }),
         {
@@ -86,9 +83,9 @@ Deno.serve(async (req: Request) => {
     }
 
     const data = await response.json();
-    const assistantMessage = data.choices?.[0]?.message?.content || "No response generated";
+    const reply = data.choices?.[0]?.message?.content || "No response generated";
 
-    return new Response(JSON.stringify({ message: assistantMessage }), {
+    return new Response(JSON.stringify({ reply }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
