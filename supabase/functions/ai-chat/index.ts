@@ -30,8 +30,8 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Try Flowboard_KanbanAI first (the configured secret), fallback to OPENROUTER_API_KEY
-  const apiKey = Deno.env.get("FLOWBOARD_KANBANAI") || Deno.env.get("OPENROUTER_API_KEY");
+  // Use Flowboard_KanbanAI secret (OpenRouter API key)
+  const apiKey = Deno.env.get("Flowboard_KanbanAI");
   if (!apiKey) {
     return new Response(JSON.stringify({ error: "API key not configured" }), {
       status: 500,
